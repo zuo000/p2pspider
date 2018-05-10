@@ -183,9 +183,6 @@ func (p *p2pspider) work(ac *godht.Announce, tokens chan struct{}) {
 	defer func() {
 		<-tokens
 	}()
-	if p.isExist(ac.InfohashHex) {
-		return
-	}
 	if p.blacklist.in(ac.Peer) {
 		return
 	}
@@ -199,11 +196,15 @@ func (p *p2pspider) work(ac *godht.Announce, tokens chan struct{}) {
 		p.blacklist.add(ac.Peer)
 		return
 	}
-	_, err = p.save(ac.InfohashHex, data)
+	t, err := newTorrent(data, ac.InfohashHex)
 	if err != nil {
 		return
 	}
-	t, err := newTorrent(data, ac.InfohashHex)
+	if p.isExist(t.name) {
+    log.Println("exit")
+		return
+	}
+	_, err = p.save(t.name, data)
 	if err != nil {
 		return
 	}
@@ -243,8 +244,10 @@ func (p *p2pspider) save(infohashHex string, data []byte) (string, error) {
 }
 
 func (p *p2pspider) pathname(infohashHex string) (name string, dir string) {
-	dir = path.Join(p.dir, infohashHex[:2], infohashHex[len(infohashHex)-2:])
-	name = path.Join(dir, infohashHex+".torrent")
+	dir = p.dir
+	//dir = path.Join(p.dir, infohashHex[:2], infohashHex[len(infohashHex)-2:])
+	name = path.Join(p.dir, infohashHex+".torrent")
+	log.Println(name)
 	return
 }
 
