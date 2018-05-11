@@ -200,19 +200,49 @@ func (p *p2pspider) work(ac *godht.Announce, tokens chan struct{}) {
 	if err != nil {
 		return
 	}
-	if p.isExist(t.name) {
+  sreplacer := strings.NewReplacer(" ", "_",
+                                   "#", "_",
+                                   ";", "_",
+                                   "-", "_",
+                                   ".", "_",
+                                   "+", "_",
+                                   "$", "_",
+                                   "%", "_",
+                                   "*", "_",
+                                   "!", "_",
+                                   "@", "_",
+                                   "^", "_",
+                                   "&", "_",
+                                   "(", "_",
+                                   ")", "_",
+                                   "{", "_",
+                                   "}", "_",
+                                   "<", "_",
+                                   ">", "_",
+                                   "[", "_",
+                                   "]", "_",
+                                   "=", "_",
+                                   "\\", "_",
+                                   "/", "_",
+                                   "?", "_",
+                                   ",", "_",
+                                   ":", "_",
+                                   "~", "_",
+                                   )
+  filename := sreplacer.Replace(t.name)
+	if p.isExist(filename) {
     log.Println("exit")
 		return
 	}
-	_, err = p.save(t.name, data)
+	_, err = p.save(filename, data)
 	if err != nil {
 		return
 	}
 	log.Println(t)
 }
 
-func (p *p2pspider) isExist(infohashHex string) bool {
-	name, _ := p.pathname(infohashHex)
+func (p *p2pspider) isExist(filename string) bool {
+	name, _ := p.pathname(filename)
 	_, err := os.Stat(name)
 	if os.IsNotExist(err) {
 		return false
@@ -220,8 +250,8 @@ func (p *p2pspider) isExist(infohashHex string) bool {
 	return err == nil
 }
 
-func (p *p2pspider) save(infohashHex string, data []byte) (string, error) {
-	name, dir := p.pathname(infohashHex)
+func (p *p2pspider) save(filename string, data []byte) (string, error) {
+	name, dir := p.pathname(filename)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", err
 	}
@@ -243,10 +273,10 @@ func (p *p2pspider) save(infohashHex string, data []byte) (string, error) {
 	return name, nil
 }
 
-func (p *p2pspider) pathname(infohashHex string) (name string, dir string) {
+func (p *p2pspider) pathname(filename string) (name string, dir string) {
 	dir = p.dir
-	//dir = path.Join(p.dir, infohashHex[:2], infohashHex[len(infohashHex)-2:])
-	name = path.Join(p.dir, infohashHex+".torrent")
+	//dir = path.Join(p.dir, filename[:2], filename[len(filename)-2:])
+	name = path.Join(p.dir, filename+".torrent")
 	log.Println(name)
 	return
 }
